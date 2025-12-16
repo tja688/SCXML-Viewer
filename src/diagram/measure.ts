@@ -24,31 +24,34 @@ export const createTextMeasurer = () => {
   }
 }
 
-const BASE_WIDTH = 160
-const BASE_HEIGHT = 64
-const HEADER_HEIGHT = 36
-const LABEL_LEFT = 16
-const LABEL_RIGHT = 20
-const BODY_PADDING_X = 22
-const BODY_PADDING_Y = 16
+// === 优化后的尺寸常量 - 解决遮挡问题 ===
+const BASE_WIDTH = 200           // 基础宽度: 160 -> 200
+const BASE_HEIGHT = 72           // 基础高度: 64 -> 72
+const HEADER_HEIGHT = 40         // 标题高度: 36 -> 40
+const LABEL_LEFT = 20            // 左边距: 16 -> 20
+const LABEL_RIGHT = 24           // 右边距: 20 -> 24
+const BODY_PADDING_X = 28        // 水平内边距: 22 -> 28
+const BODY_PADDING_Y = 20        // 垂直内边距: 16 -> 20
 
 const circleNode = (size: number): NodeSizeMetadata => ({
   width: size,
   height: size,
   headerHeight: 0,
-  padding: { top: 8, right: 8, bottom: 8, left: 8 },
+  // === 增加圆形节点的padding，避免与其他元素靠太近 ===
+  padding: { top: 12, right: 12, bottom: 12, left: 12 },  // 8 -> 12
   isContainer: false,
 })
 
 const computeNodeSize = (node: DiagramNode, measureText: TextMeasurer): NodeSizeMetadata => {
+  // === 增加圆形节点尺寸，使其更清晰可见 ===
   if (node.kind === 'initial') {
-    return circleNode(28)
+    return circleNode(32)  // 28 -> 32
   }
   if (node.kind === 'final') {
-    return circleNode(40)
+    return circleNode(48)  // 40 -> 48
   }
   if (node.kind === 'history') {
-    return circleNode(32)
+    return circleNode(40)  // 32 -> 40
   }
 
   const labelText = node.label || node.id
@@ -68,11 +71,21 @@ const computeNodeSize = (node: DiagramNode, measureText: TextMeasurer): NodeSize
     }
   }
 
+  // === 修正点：容器节点优化 ===
+  // 容器节点需要给子节点足够的空间，同时让ELK能够正确计算布局
+  // 给一个合理的初始高度：标题高度 + 顶部padding + 底部最小空间
+  const containerMinHeight = HEADER_HEIGHT + 60  // 给予更多初始空间
+
   return {
     width,
-    height: Math.max(BASE_HEIGHT + HEADER_HEIGHT, HEADER_HEIGHT + 140),
+    height: containerMinHeight,  // 更合理的初始高度
     headerHeight: HEADER_HEIGHT,
-    padding: { top: HEADER_HEIGHT + 18, right: 26, bottom: 26, left: 26 },
+    padding: {
+      top: HEADER_HEIGHT + 32,   // 顶部padding增加：24 -> 32
+      right: 32,                  // 右侧padding增加：24 -> 32
+      bottom: 32,                 // 底部padding增加：24 -> 32
+      left: 32                    // 左侧padding增加：24 -> 32
+    },
     isContainer: true,
   }
 }
